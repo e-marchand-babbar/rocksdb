@@ -1,4 +1,5 @@
 NATIVE_JAVA_CLASSES = \
+	org.rocksdb.AbstractAssociativeMergeOperator \
 	org.rocksdb.AbstractCompactionFilter\
 	org.rocksdb.AbstractCompactionFilterFactory\
 	org.rocksdb.AbstractComparator\
@@ -105,6 +106,7 @@ ARCH := $(shell getconf LONG_BIT)
 SHA256_CMD ?= sha256sum
 
 JAVA_TESTS = \
+	org.rocksdb.AbstractMergeOperatorTest\
 	org.rocksdb.BackupEngineOptionsTest\
 	org.rocksdb.BackupEngineTest\
 	org.rocksdb.BlobOptionsTest\
