@@ -2429,6 +2429,53 @@ class JniUtil {
   }
 };
 
+// RAII over JNIEnv
+class JniEnv final {
+
+ public:
+  static JniEnv from( JavaVM* const jvm ) {
+    jboolean jattached = JNI_FALSE;
+    JNIEnv* const env = JniUtil::getJniEnv( jvm, &jattached );
+    return JniEnv{ jvm, env, jattached }; // should use RVO
+  }
+
+ public:
+  JniEnv( JniEnv&& ) = delete;
+  JniEnv( const JniEnv& ) = delete;
+
+  ~JniEnv() {
+    if ( env_ != nullptr ) {
+      JniUtil::releaseJniEnv( jvm_, attached_ );
+    }
+  }
+
+ public:
+  JniEnv& operator=( JniEnv&& ) = delete;
+  JniEnv& operator=( const JniEnv& ) = delete;
+
+  inline JNIEnv* operator->() const noexcept {
+    return env_;
+  }
+
+  [[nodiscard]]
+  inline JNIEnv* get() const noexcept {
+    return env_;
+  }
+
+  explicit inline operator bool() const noexcept {
+    return env_ != nullptr;
+  }
+
+ private:
+  JniEnv( JavaVM* const jvm, JNIEnv* const env, jboolean const attached ) noexcept
+    : jvm_(jvm), env_(env), attached_(attached) { }
+
+ private:
+  JavaVM* const jvm_;
+  JNIEnv* const env_;
+  jboolean attached_;
+};
+
 class MapJni : public JavaClass {
  public:
   /**

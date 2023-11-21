@@ -640,6 +640,7 @@ MICROBENCH_SOURCES =                                          \
   microbench/db_basic_bench.cc                                  \
 
 JNI_NATIVE_SOURCES =                                          \
+  java/rocksjni/abstract_associative_merge_operator.cc        \
   java/rocksjni/backupenginejni.cc                            \
   java/rocksjni/backup_engine_options.cc                      \
   java/rocksjni/checkpoint.cc                                 \
