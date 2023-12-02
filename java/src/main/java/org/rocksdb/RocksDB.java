@@ -33,6 +33,11 @@ public class RocksDB extends RocksObject {
       new AtomicReference<>(LibraryState.NOT_LOADED);
 
   static {
+    Runtime.getRuntime().addShutdownHook( new Thread( () -> {
+      if ( RocksDB.libraryLoaded.get() == LibraryState.LOADED )
+        RocksDB.shutdownJniEnv();
+    }));
+
     RocksDB.loadLibrary();
   }
 
@@ -4381,6 +4386,7 @@ public class RocksDB extends RocksObject {
       final long[] columnFamilyOptions) throws RocksDBException;
 
   @Override protected native void disposeInternal(final long handle);
+  private static native void shutdownJniEnv();
 
   private static native void closeDatabase(final long handle) throws RocksDBException;
   private static native byte[][] listColumnFamilies(final long optionsHandle, final String path)

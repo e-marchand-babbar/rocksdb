@@ -39,9 +39,13 @@ namespace ROCKSDB_NAMESPACE {
 
     ~AssociativeMergeOperatorJni() final {
       if ( jself_ != nullptr ) {
-        auto const env = JniEnv::from( jvm_ );
-        if ( env )
-          env->DeleteGlobalRef(jself_ );
+        std::cerr << "Destroying AssociativeMergeOperatorJni [self: " << jself_ << ']' << '\n';
+        const auto& env = JniEnv::getOrCreate( jvm_ );
+        //auto const env = JniEnv::from( jvm_ );
+        if ( env ) {
+          env->DeleteGlobalRef(jself_);
+          std::cerr << "Destroyed AssociativeMergeOperatorJni [self: " << jself_ << ']' << '\n';
+        }
       }
     }
 
@@ -60,7 +64,8 @@ namespace ROCKSDB_NAMESPACE {
                 const Slice& value,
                 std::string* new_value,
                 Logger* /*logger*/ ) const final {
-      auto const env = JniEnv::from( jvm_ );
+      const auto& env = JniEnv::getOrCreate( jvm_ );
+      //auto const env = JniEnv::from( jvm_ );
       if ( !env )
         return false; // error
 
@@ -92,14 +97,19 @@ namespace ROCKSDB_NAMESPACE {
         return false; // error
       new_value->assign( reinterpret_cast<const char*>(carray), len );
       env->ReleasePrimitiveArrayCritical( jresult, carray, JNI_ABORT );
+      env->DeleteLocalRef( jresult );
+      env->DeleteLocalRef( jvalue );
+      env->DeleteLocalRef( jexisting_value );
+      env->DeleteLocalRef( jkey );
       return true;
     }
 
   public:
-    bool set_self( jobject jthis ) {
+    bool setSelf( jobject jthis ) {
       if ( jself_ != nullptr || jthis == nullptr )
         return false; // error
-      auto const env = JniEnv::from( jvm_ );
+      const auto& env = JniEnv::getOrCreate( jvm_ );
+      //auto const env = JniEnv::from( jvm_ );
       if ( !env )
         return false; // error
       auto const jself = env->NewGlobalRef(jthis );
@@ -138,5 +148,6 @@ jboolean Java_org_rocksdb_AbstractAssociativeMergeOperator_initOperator( JNIEnv*
   auto* const shared_ptr = reinterpret_cast<std::shared_ptr<ROCKSDB_NAMESPACE::AssociativeMergeOperatorJni>*>( jhandle );
   if ( shared_ptr == nullptr || !*shared_ptr )
     return false; // error
-  return (*shared_ptr)->set_self( jthis );
+  return (*shared_ptr)->setSelf( jthis );
 }
+

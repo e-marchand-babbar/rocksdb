@@ -1604,7 +1604,7 @@ class JniUtil {
    * @return A pointer to the JNIEnv or nullptr if a fatal error
    *     occurs and the JNIEnv cannot be retrieved
    */
-  static JNIEnv* getJniEnv(JavaVM* jvm, jboolean* attached) {
+  static JNIEnv* getJniEnv(JavaVM* jvm, jboolean* attached, bool const as_daemon = false) {
     assert(jvm != nullptr);
 
     JNIEnv* env;
@@ -1617,8 +1617,9 @@ class JniUtil {
       return env;
     } else if (env_rs == JNI_EDETACHED) {
       // current thread is not attached, attempt to attach
-      const jint rs_attach =
-          jvm->AttachCurrentThread(reinterpret_cast<void**>(&env), NULL);
+      const jint rs_attach = as_daemon
+        ? jvm->AttachCurrentThreadAsDaemon(reinterpret_cast<void**>(&env), NULL)
+        : jvm->AttachCurrentThread(reinterpret_cast<void**>(&env), NULL);
       if (rs_attach == JNI_OK) {
         *attached = JNI_TRUE;
         return env;
@@ -2429,30 +2430,36 @@ class JniUtil {
   }
 };
 
-// RAII over JNIEnv
 class JniEnv final {
 
  public:
-  static JniEnv from( JavaVM* const jvm ) {
-    jboolean jattached = JNI_FALSE;
-    JNIEnv* const env = JniUtil::getJniEnv( jvm, &jattached );
-    return JniEnv{ jvm, env, jattached }; // should use RVO
+  static const JniEnv& getOrCreate( JavaVM* const jvm ) {
+    if ( !JniEnv::cache_ )
+      JniEnv::cache_ = std::make_unique<JniEnv>( JniEnv::from(jvm) );
+    return *JniEnv::cache_;
+  }
+
+  static void shutdown() {
+    JniEnv::shutdown_ = true;
   }
 
  public:
-  JniEnv( JniEnv&& ) = delete;
+  JniEnv( JniEnv&& other ) noexcept
+    : jvm_(std::exchange(other.jvm_,nullptr))
+    , env_(std::exchange(other.env_,nullptr))
+    , attached_(std::exchange(other.attached_,false)) { }
+
   JniEnv( const JniEnv& ) = delete;
 
   ~JniEnv() {
-    if ( env_ != nullptr ) {
+    if ( env_ != nullptr && !JniEnv::shutdown_ ) {
+      std::cerr << "Destroying JniEnv [jvm: " << jvm_ << ", env: " << env_ << ", atch: " << (attached_ != 0) << ']' << '\n';
       JniUtil::releaseJniEnv( jvm_, attached_ );
+      std::cerr << "Destroyed JniEnv [jvm: " << jvm_ << ", env: " << env_ << ", atch: " << (attached_ != 0) << ']' << '\n';
     }
   }
 
  public:
-  JniEnv& operator=( JniEnv&& ) = delete;
-  JniEnv& operator=( const JniEnv& ) = delete;
-
   inline JNIEnv* operator->() const noexcept {
     return env_;
   }
@@ -2466,14 +2473,30 @@ class JniEnv final {
     return env_ != nullptr;
   }
 
- private:
-  JniEnv( JavaVM* const jvm, JNIEnv* const env, jboolean const attached ) noexcept
-    : jvm_(jvm), env_(env), attached_(attached) { }
+  JniEnv& operator=( JniEnv&& ) = delete;
+  JniEnv& operator=( const JniEnv& ) = delete;
 
  private:
-  JavaVM* const jvm_;
-  JNIEnv* const env_;
+  static JniEnv from( JavaVM* const jvm ) {
+    jboolean jattached = JNI_FALSE;
+    JNIEnv* const env = JniUtil::getJniEnv( jvm, &jattached, true );
+    return JniEnv{ jvm, env, jattached }; // should use RVO
+  }
+
+ private:
+  JniEnv( JavaVM* const jvm, JNIEnv* const env, jboolean const attached ) noexcept
+    : jvm_(jvm), env_(env), attached_(attached) {
+    std::cerr << "Creating JniEnv [jvm: " << jvm_ << ", env: " << env_ << ", atch: " << (attached_ != 0) << ']' << '\n';
+  }
+
+ private:
+  JavaVM* jvm_;
+  JNIEnv* env_;
   jboolean attached_;
+
+ private:
+  static thread_local std::unique_ptr<JniEnv> cache_;
+  static volatile bool shutdown_;
 };
 
 class MapJni : public JavaClass {

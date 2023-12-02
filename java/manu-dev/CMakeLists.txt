@@ -51,6 +51,7 @@ set(JNI_NATIVE_SOURCES
     ${PROJECT_SOURCE_DIR}/../rocksjni/options.cc
     ${PROJECT_SOURCE_DIR}/../rocksjni/options_util.cc
     ${PROJECT_SOURCE_DIR}/../rocksjni/persistent_cache.cc
+    ${PROJECT_SOURCE_DIR}/../rocksjni/portal.cc
     ${PROJECT_SOURCE_DIR}/../rocksjni/ratelimiterjni.cc
     ${PROJECT_SOURCE_DIR}/../rocksjni/remove_emptyvalue_compactionfilterjni.cc
     ${PROJECT_SOURCE_DIR}/../rocksjni/restorejni.cc

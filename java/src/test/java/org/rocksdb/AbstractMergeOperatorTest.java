@@ -15,6 +15,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -30,9 +31,15 @@ public class AbstractMergeOperatorTest
   //final static int nbKeys = 1024 * 1024;
   //final static int nbMerges = 20;
   //final static int kvSize = 1024;
-  final static int nbKeys = 128 * 1024;
-  final static int nbMerges = 5;
-  final static int kvSize = 256;
+
+  // short test
+  //final static int nbKeys = 128 * 1024;
+  //final static int nbMerges = 5;
+  //final static int kvSize = 256;
+
+  final static int nbKeys = 256 * 1024;
+  final static int nbMerges = 10;
+  final static int kvSize = 1024;
 
   // -------------------------------------------------------------------------------------------------------------------------------
 
@@ -55,12 +62,19 @@ public class AbstractMergeOperatorTest
 
   private static final class BytesXorAssociativeMergeOperator extends AbstractAssociativeMergeOperator
   {
+    //private final ConcurrentHashMap<Long, Long> counters = new ConcurrentHashMap<>();
+
     public BytesXorAssociativeMergeOperator() {
       super();
     }
 
     @Override
     public byte[] merge( final byte[] $, final byte[] oldvalue, final byte[] newvalue ) {
+      //counters.compute(
+      //  Thread.currentThread().getId(),
+      //  (key, value) -> 1 + (value == null ? 0 : value)
+      //);
+
       if ( oldvalue == null )
         return newvalue;
       if ( oldvalue.length != newvalue.length ) {
@@ -115,7 +129,7 @@ public class AbstractMergeOperatorTest
 
   // -------------------------------------------------------------------------------------------------------------------------------
 
-  @Test
+  //@Test
   public void xorBytesTest() {
     System.out.println( "---- xorBytesTest ----------------------------------" );
     final byte[] a = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 7, 5, 3};
@@ -132,7 +146,7 @@ public class AbstractMergeOperatorTest
 
   // -------------------------------------------------------------------------------------------------------------------------------
 
-  @Test
+  //@Test
   public void testConcatStringAssociativeMergeOperator() throws InterruptedException {
     final var thread = new Thread( () -> {
       System.out.println( "---- testConcatStringAssociativeMergeOperator ------" );
@@ -171,8 +185,8 @@ public class AbstractMergeOperatorTest
         throw new RuntimeException( e );
       }
     }, "test-concat-string-merge" );
-    thread.setDaemon( false );
 
+    thread.setDaemon( false );
     thread.start();
     thread.join();
   }
@@ -222,6 +236,8 @@ public class AbstractMergeOperatorTest
         long perfStartTime = System.currentTimeMillis();
         System.out.println( "Starting merge perf test" );
         for ( int mi = 0; mi < nbMerges; mi++ ) {
+          if ( Thread.interrupted() )
+            throw new InterruptedException();
           t0 = System.currentTimeMillis();
           for ( int ki = 0; ki < nbKeys; ki++ ) {
             rng.nextBytes( buf );
@@ -241,20 +257,44 @@ public class AbstractMergeOperatorTest
         System.out.println( "Merge perf test done " + (System.currentTimeMillis() - perfStartTime) / 1000.0 + "s" );
 
         try ( final RocksIterator it = db.newIterator(rOpt) ) {
+          System.out.println( "Starting merge read test" );
           long startTime = System.currentTimeMillis();
           int errorCount = Check.result( it, m, values );
           long endTime = System.currentTimeMillis();
-          if ( errorCount > 0 )
-            System.err.println( "Found " + errorCount + " errors" );
           System.out.println( "Total read time in sec : " + (endTime - startTime) / 1000.0 );
           System.out.println( "Total time in sec : " + (endTime - globalStartTime) / 1000.0 );
+          if ( errorCount > 0 )
+            System.err.println( "Found " + errorCount + " errors" );
           assertThat( errorCount ).isEqualTo( 0 );
         }
+
+        //xorOperator.counters.forEach( (tid, count) ->
+        //  System.out.printf( "Merge counts for threadID %d: %,d%n", tid, count )
+        //);
       }
       catch ( Exception e ) {
         throw new RuntimeException(e);
       }
     }, "perf-bytes-xor-merge" );
+
+    Runtime.getRuntime().addShutdownHook( new Thread( () -> {
+      System.err.printf( "[shutdown-hook] enter%n" );
+      try {
+        if ( thread.isAlive() ) {
+          System.err.printf( "[shutdown-hook] interrupting%n" );
+          thread.interrupt();
+          System.err.printf( "[shutdown-hook] joining for 2s%n" );
+          thread.join( 2000 );
+          if ( thread.isAlive() )
+            System.err.printf( "[shutdown-hook] still alive%n" );
+        }
+      }
+      catch ( InterruptedException e ) {
+        System.err.printf( "[shutdown-hook] interrupted%n" );
+        Thread.currentThread().interrupt();
+      }
+      System.err.printf( "[shutdown-hook] exit%n" );
+    }));
 
     thread.setDaemon( false );
     thread.start();
