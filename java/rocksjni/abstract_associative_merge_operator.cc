@@ -1,5 +1,4 @@
 /*
- * @author cristian.lorenzetto@gmail.com
  * @author emmanuel.marchand@babbar.tech
  */
 
@@ -39,13 +38,9 @@ namespace ROCKSDB_NAMESPACE {
 
     ~AssociativeMergeOperatorJni() final {
       if ( jself_ != nullptr ) {
-        std::cerr << "Destroying AssociativeMergeOperatorJni [self: " << jself_ << ']' << '\n';
         const auto& env = JniEnv::getOrCreate( jvm_ );
-        //auto const env = JniEnv::from( jvm_ );
-        if ( env ) {
+        if ( env )
           env->DeleteGlobalRef(jself_);
-          std::cerr << "Destroyed AssociativeMergeOperatorJni [self: " << jself_ << ']' << '\n';
-        }
       }
     }
 
@@ -65,7 +60,6 @@ namespace ROCKSDB_NAMESPACE {
                 std::string* new_value,
                 Logger* /*logger*/ ) const final {
       const auto& env = JniEnv::getOrCreate( jvm_ );
-      //auto const env = JniEnv::from( jvm_ );
       if ( !env )
         return false; // error
 
@@ -97,6 +91,7 @@ namespace ROCKSDB_NAMESPACE {
         return false; // error
       new_value->assign( reinterpret_cast<const char*>(carray), len );
       env->ReleasePrimitiveArrayCritical( jresult, carray, JNI_ABORT );
+      // delete local reference is not mandatory but jnicheck emits warnings
       env->DeleteLocalRef( jresult );
       env->DeleteLocalRef( jvalue );
       env->DeleteLocalRef( jexisting_value );
@@ -109,7 +104,6 @@ namespace ROCKSDB_NAMESPACE {
       if ( jself_ != nullptr || jthis == nullptr )
         return false; // error
       const auto& env = JniEnv::getOrCreate( jvm_ );
-      //auto const env = JniEnv::from( jvm_ );
       if ( !env )
         return false; // error
       auto const jself = env->NewGlobalRef(jthis );
@@ -150,4 +144,3 @@ jboolean Java_org_rocksdb_AbstractAssociativeMergeOperator_initOperator( JNIEnv*
     return false; // error
   return (*shared_ptr)->setSelf( jthis );
 }
-

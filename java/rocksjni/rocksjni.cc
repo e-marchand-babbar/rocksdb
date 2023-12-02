@@ -289,10 +289,9 @@ Java_org_rocksdb_RocksDB_openAsSecondary__JLjava_lang_String_2Ljava_lang_String_
  * Method:    disposeInternal
  * Signature: (J)V
  */
-void Java_org_rocksdb_RocksDB_disposeInternal(JNIEnv* env, jobject, jlong jhandle) {
+void Java_org_rocksdb_RocksDB_disposeInternal(JNIEnv*, jobject, jlong jhandle) {
   auto* db = reinterpret_cast<ROCKSDB_NAMESPACE::DB*>(jhandle);
   assert(db != nullptr);
-  std::cerr << "[RocksDB] disposeInternal [env: " << env << ']' << '\n';
   delete db;
 }
 
@@ -301,8 +300,7 @@ void Java_org_rocksdb_RocksDB_disposeInternal(JNIEnv* env, jobject, jlong jhandl
  * Method:    shutdownJniEnv
  * Signature: ()V
  */
-void Java_org_rocksdb_RocksDB_shutdownJniEnv(JNIEnv* env, jclass) {
-  std::cerr << "[RocksDB] shutdownJniEnv [env: " << env << ']' << '\n';
+void Java_org_rocksdb_RocksDB_shutdownJniEnv(JNIEnv*, jclass) {
   ROCKSDB_NAMESPACE::JniEnv::shutdown();
 }
 

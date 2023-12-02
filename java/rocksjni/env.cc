@@ -33,11 +33,10 @@ jlong Java_org_rocksdb_Env_getDefaultEnvInternal(JNIEnv*, jclass) {
  * Method:    disposeInternal
  * Signature: (J)V
  */
-void Java_org_rocksdb_RocksEnv_disposeInternal(JNIEnv* env, jobject,
+void Java_org_rocksdb_RocksEnv_disposeInternal(JNIEnv*, jobject,
                                                jlong jhandle) {
   auto* e = reinterpret_cast<ROCKSDB_NAMESPACE::Env*>(jhandle);
   assert(e != nullptr);
-  std::cerr << "[RocksEnv] disposeInternal [env: " << env << ']' << '\n';
   delete e;
 }
 

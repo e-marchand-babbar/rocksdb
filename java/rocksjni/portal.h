@@ -2449,15 +2449,12 @@ class JniEnv final {
     , env_(std::exchange(other.env_,nullptr))
     , attached_(std::exchange(other.attached_,false)) { }
 
-  JniEnv( const JniEnv& ) = delete;
-
   ~JniEnv() {
-    if ( env_ != nullptr && !JniEnv::shutdown_ ) {
-      std::cerr << "Destroying JniEnv [jvm: " << jvm_ << ", env: " << env_ << ", atch: " << (attached_ != 0) << ']' << '\n';
+    if ( env_ != nullptr && !JniEnv::shutdown_ )
       JniUtil::releaseJniEnv( jvm_, attached_ );
-      std::cerr << "Destroyed JniEnv [jvm: " << jvm_ << ", env: " << env_ << ", atch: " << (attached_ != 0) << ']' << '\n';
-    }
   }
+
+  JniEnv( const JniEnv& ) = delete;
 
  public:
   inline JNIEnv* operator->() const noexcept {
@@ -2485,9 +2482,7 @@ class JniEnv final {
 
  private:
   JniEnv( JavaVM* const jvm, JNIEnv* const env, jboolean const attached ) noexcept
-    : jvm_(jvm), env_(env), attached_(attached) {
-    std::cerr << "Creating JniEnv [jvm: " << jvm_ << ", env: " << env_ << ", atch: " << (attached_ != 0) << ']' << '\n';
-  }
+    : jvm_(jvm), env_(env), attached_(attached) { }
 
  private:
   JavaVM* jvm_;
