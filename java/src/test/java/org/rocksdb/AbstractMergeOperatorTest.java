@@ -231,8 +231,6 @@ public class AbstractMergeOperatorTest
         long perfStartTime = System.currentTimeMillis();
         System.out.println( "Starting merge perf test" );
         for ( int mi = 0; mi < nbMerges; mi++ ) {
-          if ( Thread.interrupted() )
-            throw new InterruptedException();
           t0 = System.currentTimeMillis();
           for ( int ki = 0; ki < nbKeys; ki++ ) {
             rng.nextBytes( buf );
