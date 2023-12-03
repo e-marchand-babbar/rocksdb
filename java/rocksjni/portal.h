@@ -2439,9 +2439,10 @@ class JniEnv final {
   }
 
   static const JniEnv& fast( JavaVM* const jvm ) {
-    if ( !JniEnv::cache_ )
-      JniEnv::cache_ = std::make_unique<JniEnv>( JniEnv::from(jvm,true) );
-    return *JniEnv::cache_;
+    static thread_local std::unique_ptr<JniEnv> cache = std::make_unique<JniEnv>(
+      JniEnv::from( jvm, true )
+    );
+    return *cache;
   }
 
   static void shutdown() {
@@ -2498,7 +2499,6 @@ class JniEnv final {
   jboolean attached_;
 
  private:
-  static thread_local std::unique_ptr<JniEnv> cache_;
   static volatile bool shutdown_;
 };
 
