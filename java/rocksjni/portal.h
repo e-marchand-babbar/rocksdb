@@ -2439,13 +2439,17 @@ class JniEnv final {
   }
 
   static const JniEnv& fast( JavaVM* const jvm ) {
-    static thread_local std::unique_ptr<JniEnv> cache = std::make_unique<JniEnv>(
-      JniEnv::from( jvm, true )
+    static thread_local std::unique_ptr<JniEnv> cache =
+      std::make_unique<JniEnv>(
+        JniEnv::from( jvm, true )
     );
     return *cache;
   }
 
   static void shutdown() {
+    // this is to signal that the JVM is shutting down
+    // hence prevent destructor to call JniUtil::releaseJniEnv()
+    // this method should be called if using JniEnv::fast()
     JniEnv::shutdown_ = true;
   }
 
@@ -2485,7 +2489,7 @@ class JniEnv final {
   [[nodiscard]]
   static JniEnv from( JavaVM* const jvm, bool const as_daemon ) {
     jboolean jattached = JNI_FALSE;
-    JNIEnv* const env = JniUtil::getJniEnv( jvm, &jattached, as_daemon );
+    auto* const env = JniUtil::getJniEnv( jvm, &jattached, as_daemon );
     return JniEnv{ jvm, env, jattached }; // should use RVO
   }
 
