@@ -2433,9 +2433,14 @@ class JniUtil {
 class JniEnv final {
 
  public:
-  static const JniEnv& getOrCreate( JavaVM* const jvm ) {
+  [[nodiscard]]
+  static JniEnv safe( JavaVM* const jvm  ) {
+    return JniEnv::from( jvm, false );
+  }
+
+  static const JniEnv& fast( JavaVM* const jvm ) {
     if ( !JniEnv::cache_ )
-      JniEnv::cache_ = std::make_unique<JniEnv>( JniEnv::from(jvm) );
+      JniEnv::cache_ = std::make_unique<JniEnv>( JniEnv::from(jvm,true) );
     return *JniEnv::cache_;
   }
 
@@ -2457,6 +2462,7 @@ class JniEnv final {
   JniEnv( const JniEnv& ) = delete;
 
  public:
+  [[nodiscard]]
   inline JNIEnv* operator->() const noexcept {
     return env_;
   }
@@ -2466,6 +2472,7 @@ class JniEnv final {
     return env_;
   }
 
+  [[nodiscard]]
   explicit inline operator bool() const noexcept {
     return env_ != nullptr;
   }
@@ -2474,9 +2481,10 @@ class JniEnv final {
   JniEnv& operator=( const JniEnv& ) = delete;
 
  private:
-  static JniEnv from( JavaVM* const jvm ) {
+  [[nodiscard]]
+  static JniEnv from( JavaVM* const jvm, bool const as_daemon ) {
     jboolean jattached = JNI_FALSE;
-    JNIEnv* const env = JniUtil::getJniEnv( jvm, &jattached, true );
+    JNIEnv* const env = JniUtil::getJniEnv( jvm, &jattached, as_daemon );
     return JniEnv{ jvm, env, jattached }; // should use RVO
   }
 

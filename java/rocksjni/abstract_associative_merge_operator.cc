@@ -13,6 +13,7 @@ namespace ROCKSDB_NAMESPACE {
   class AssociativeMergeOperatorJni final : public AssociativeMergeOperator {
 
   public:
+    [[nodiscard]]
     static std::unique_ptr<AssociativeMergeOperatorJni> from( JNIEnv* const env ) {
       JavaVM* jvm = nullptr;
       auto const rs = env->GetJavaVM( &jvm );
@@ -38,9 +39,9 @@ namespace ROCKSDB_NAMESPACE {
 
     ~AssociativeMergeOperatorJni() final {
       if ( jself_ != nullptr ) {
-        const auto& env = JniEnv::getOrCreate( jvm_ );
+        const auto& env = JniEnv::fast( jvm_ );
         if ( env )
-          env->DeleteGlobalRef(jself_);
+          env->DeleteGlobalRef( jself_ );
       }
     }
 
@@ -59,7 +60,7 @@ namespace ROCKSDB_NAMESPACE {
                 const Slice& value,
                 std::string* new_value,
                 Logger* /*logger*/ ) const final {
-      const auto& env = JniEnv::getOrCreate( jvm_ );
+      const auto& env = JniEnv::fast( jvm_ );
       if ( !env )
         return false; // error
 
@@ -103,7 +104,7 @@ namespace ROCKSDB_NAMESPACE {
     bool setSelf( jobject jthis ) {
       if ( jself_ != nullptr || jthis == nullptr )
         return false; // error
-      const auto& env = JniEnv::getOrCreate( jvm_ );
+      const auto& env = JniEnv::fast( jvm_ );
       if ( !env )
         return false; // error
       auto const jself = env->NewGlobalRef(jthis );
