@@ -22,3 +22,15 @@
 * using CLion for the C++ sources:
   * open `java/manu-dev/CMakeLists.txt` as project
   * adjust build options (e.g. `-j 8`)
+
+# Make files
+  * `./src.mk`
+  * `./Makefile`
+  * `./java/CMakeLists.txt`
+  * `./java/Makefile`
+  * `./java/manu-dev/CMakeLists.txt`
+    * This is a convenience project to aid the development of JNI
+
+# Source files
+  * `./java/rocksjni/`
+  * `./java/src/`

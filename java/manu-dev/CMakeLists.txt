@@ -10,15 +10,15 @@ add_definitions(-DROCKSDB_PLATFORM_POSIX -DROCKSDB_LIB_IO_POSIX)
 
 set(JNI_NATIVE_SOURCES
     ${PROJECT_SOURCE_DIR}/../rocksjni/abstract_associative_merge_operator.cc
+    ${PROJECT_SOURCE_DIR}/../rocksjni/abstract_compaction_filter.cc
     ${PROJECT_SOURCE_DIR}/../rocksjni/backup_engine_options.cc
     ${PROJECT_SOURCE_DIR}/../rocksjni/backupenginejni.cc
+    ${PROJECT_SOURCE_DIR}/../rocksjni/cache.cc
     ${PROJECT_SOURCE_DIR}/../rocksjni/cassandra_compactionfilterjni.cc
     ${PROJECT_SOURCE_DIR}/../rocksjni/cassandra_value_operator.cc
     ${PROJECT_SOURCE_DIR}/../rocksjni/checkpoint.cc
     ${PROJECT_SOURCE_DIR}/../rocksjni/clock_cache.cc
-    ${PROJECT_SOURCE_DIR}/../rocksjni/cache.cc
     ${PROJECT_SOURCE_DIR}/../rocksjni/columnfamilyhandle.cc
-    ${PROJECT_SOURCE_DIR}/../rocksjni/compaction_filter.cc
     ${PROJECT_SOURCE_DIR}/../rocksjni/compaction_filter_factory.cc
     ${PROJECT_SOURCE_DIR}/../rocksjni/compaction_filter_factory_jnicallback.cc
     ${PROJECT_SOURCE_DIR}/../rocksjni/compaction_job_info.cc

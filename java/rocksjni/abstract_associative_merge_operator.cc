@@ -1,6 +1,7 @@
-/*
- * @author emmanuel.marchand@babbar.tech
- */
+// Copyright (c) 2011-present, Facebook, Inc.  All rights reserved.
+//  This source code is licensed under both the GPLv2 (found in the
+//  COPYING file in the root directory) and Apache 2.0 License
+//  (found in the LICENSE.Apache file in the root directory).
 
 #include <string>
 #include "rocksdb/merge_operator.h"
@@ -129,13 +130,13 @@ namespace ROCKSDB_NAMESPACE {
 // ---------------------------------------------------------------------------------------------------------------------------------
 
 jlong Java_org_rocksdb_AbstractAssociativeMergeOperator_newOperator( JNIEnv* env, jclass /*jclazz*/ ) {
-  return GET_CPLUSPLUS_POINTER( new std::shared_ptr<ROCKSDB_NAMESPACE::MergeOperator>(
+  return GET_CPLUSPLUS_POINTER( new std::shared_ptr<ROCKSDB_NAMESPACE::AssociativeMergeOperatorJni>(
     ROCKSDB_NAMESPACE::AssociativeMergeOperatorJni::from( env )
   ));
 }
 
 void Java_org_rocksdb_AbstractAssociativeMergeOperator_disposeInternal( JNIEnv* /*env*/, jobject /*obj*/, jlong jhandle ) {
-  auto* const shared_ptr = reinterpret_cast<std::shared_ptr<ROCKSDB_NAMESPACE::MergeOperator>*>( jhandle );
+  auto* const shared_ptr = reinterpret_cast<std::shared_ptr<ROCKSDB_NAMESPACE::AssociativeMergeOperatorJni>*>( jhandle );
   delete shared_ptr;
 }
 

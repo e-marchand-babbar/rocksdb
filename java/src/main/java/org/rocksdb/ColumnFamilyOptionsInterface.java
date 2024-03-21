@@ -183,28 +183,27 @@ public interface ColumnFamilyOptionsInterface<T extends ColumnFamilyOptionsInter
    * instead.
    * <p>
    * The client should specify only set one of the two.
-   * {#setCompactionFilter(AbstractCompactionFilter)} takes precedence
+   * {@link #setCompactionFilter(CompactionFilter)} takes precedence
    * over {@link #setCompactionFilterFactory(AbstractCompactionFilterFactory)}
    * if the client specifies both.
    * <p>
    * If multithreaded compaction is being used, the supplied CompactionFilter
    * instance may be used from different threads concurrently and so should be thread-safe.
    *
-   * @param compactionFilter {@link AbstractCompactionFilter} instance.
+   * @param compactionFilter {@link CompactionFilter} instance.
    * @return the instance of the current object.
    */
-  T setCompactionFilter(
-          final AbstractCompactionFilter<? extends AbstractSlice<?>> compactionFilter);
+  T setCompactionFilter( final CompactionFilter compactionFilter);
 
   /**
    * Accessor for the CompactionFilter instance in use.
    *
    * @return  Reference to the CompactionFilter, or null if one hasn't been set.
    */
-  AbstractCompactionFilter<? extends AbstractSlice<?>> compactionFilter();
+  CompactionFilter compactionFilter();
 
   /**
-   * This is a factory that provides {@link AbstractCompactionFilter} objects
+   * This is a factory that provides {@link CompactionFilter} objects
    * which allow an application to modify/delete a key-value during background
    * compaction.
    * <p>
@@ -215,16 +214,14 @@ public interface ColumnFamilyOptionsInterface<T extends ColumnFamilyOptionsInter
    * @param compactionFilterFactory {@link AbstractCompactionFilterFactory} instance.
    * @return the instance of the current object.
    */
-  T setCompactionFilterFactory(
-          final AbstractCompactionFilterFactory<? extends AbstractCompactionFilter<?>>
-                  compactionFilterFactory);
+  T setCompactionFilterFactory( final AbstractCompactionFilterFactory<?> compactionFilterFactory );
 
   /**
    * Accessor for the CompactionFilterFactory instance in use.
    *
    * @return  Reference to the CompactionFilterFactory, or null if one hasn't been set.
    */
-  AbstractCompactionFilterFactory<? extends AbstractCompactionFilter<?>> compactionFilterFactory();
+  AbstractCompactionFilterFactory<?> compactionFilterFactory();
 
   /**
    * This prefix-extractor uses the first n bytes of a key as its prefix.

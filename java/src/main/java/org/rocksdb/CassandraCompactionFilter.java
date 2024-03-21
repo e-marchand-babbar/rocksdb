@@ -8,8 +8,8 @@ package org.rocksdb;
 /**
  * Just a Java wrapper around CassandraCompactionFilter implemented in C++
  */
-public class CassandraCompactionFilter
-    extends AbstractCompactionFilter<Slice> {
+public final class CassandraCompactionFilter extends CompactionFilter
+{
   public CassandraCompactionFilter(
       final boolean purgeTtlOnExpiration, final int gcGracePeriodInSeconds) {
     super(createNewCassandraCompactionFilter0(purgeTtlOnExpiration, gcGracePeriodInSeconds));
@@ -17,4 +17,6 @@ public class CassandraCompactionFilter
 
   private static native long createNewCassandraCompactionFilter0(
       boolean purgeTtlOnExpiration, int gcGracePeriodInSeconds);
+
+  @Override protected native void disposeInternal( final long handle );
 }

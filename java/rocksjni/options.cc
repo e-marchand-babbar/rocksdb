@@ -216,11 +216,10 @@ void Java_org_rocksdb_Options_setMergeOperatorName(JNIEnv* env, jobject,
  * Method:    setMergeOperator
  * Signature: (JJjava/lang/String)V
  */
-void Java_org_rocksdb_Options_setMergeOperator(JNIEnv*, jobject, jlong jhandle,
-                                               jlong mergeOperatorHandle) {
-  reinterpret_cast<ROCKSDB_NAMESPACE::Options*>(jhandle)->merge_operator =
-      *(reinterpret_cast<std::shared_ptr<ROCKSDB_NAMESPACE::MergeOperator>*>(
-          mergeOperatorHandle));
+void Java_org_rocksdb_Options_setMergeOperator(JNIEnv*, jobject, jlong jopt_handle,
+                                               jlong jmergeoperator_handle) {
+  reinterpret_cast<ROCKSDB_NAMESPACE::Options*>(jopt_handle)->merge_operator =
+    *(reinterpret_cast<std::shared_ptr<ROCKSDB_NAMESPACE::MergeOperator>*>( jmergeoperator_handle ));
 }
 
 /*
@@ -228,12 +227,10 @@ void Java_org_rocksdb_Options_setMergeOperator(JNIEnv*, jobject, jlong jhandle,
  * Method:    setCompactionFilterHandle
  * Signature: (JJ)V
  */
-void Java_org_rocksdb_Options_setCompactionFilterHandle(
-    JNIEnv*, jobject, jlong jopt_handle, jlong jcompactionfilter_handle) {
-  reinterpret_cast<ROCKSDB_NAMESPACE::Options*>(jopt_handle)
-      ->compaction_filter =
-      reinterpret_cast<ROCKSDB_NAMESPACE::CompactionFilter*>(
-          jcompactionfilter_handle);
+void Java_org_rocksdb_Options_setCompactionFilterHandle(JNIEnv*, jobject, jlong jopt_handle,
+                                                        jlong jcompactionfilter_handle) {
+  reinterpret_cast<ROCKSDB_NAMESPACE::Options*>(jopt_handle)->compaction_filter =
+    reinterpret_cast<std::shared_ptr<ROCKSDB_NAMESPACE::CompactionFilter>*>( jcompactionfilter_handle )->get(); // FIXME: get() because options needs a pointer and not a smart-pointer
 }
 
 /*

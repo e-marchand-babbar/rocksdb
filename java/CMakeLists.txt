@@ -7,15 +7,16 @@ endif()
 set(CMAKE_JAVA_COMPILE_FLAGS -source 11)
 
 set(JNI_NATIVE_SOURCES
+        rocksjni/abstract_associative_merge_operator.cc
+        rocksjni/abstract_compaction_filter.cc
         rocksjni/backup_engine_options.cc
         rocksjni/backupenginejni.cc
+        rocksjni/cache.cc
         rocksjni/cassandra_compactionfilterjni.cc
         rocksjni/cassandra_value_operator.cc
         rocksjni/checkpoint.cc
         rocksjni/clock_cache.cc
-        rocksjni/cache.cc
         rocksjni/columnfamilyhandle.cc
-        rocksjni/compaction_filter.cc
         rocksjni/compaction_filter_factory.cc
         rocksjni/compaction_filter_factory_jnicallback.cc
         rocksjni/compaction_job_info.cc
@@ -48,6 +49,7 @@ set(JNI_NATIVE_SOURCES
         rocksjni/options.cc
         rocksjni/options_util.cc
         rocksjni/persistent_cache.cc
+        rocksjni/portal.cc
         rocksjni/ratelimiterjni.cc
         rocksjni/remove_emptyvalue_compactionfilterjni.cc
         rocksjni/restorejni.cc
@@ -124,6 +126,7 @@ set(JAVA_MAIN_CLASSES
   src/main/java/org/rocksdb/ColumnFamilyMetaData.java
   src/main/java/org/rocksdb/ColumnFamilyOptionsInterface.java
   src/main/java/org/rocksdb/ColumnFamilyOptions.java
+  src/main/java/org/rocksdb/CompactionFilter.java
   src/main/java/org/rocksdb/CompactionJobInfo.java
   src/main/java/org/rocksdb/CompactionJobStats.java
   src/main/java/org/rocksdb/CompactionOptions.java
