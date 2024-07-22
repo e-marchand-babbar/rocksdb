@@ -33,45 +33,65 @@
 namespace ROCKSDB_NAMESPACE {
 
 class Status {
- public:
+public:
   // Create a success status.
-  Status()
-      : code_(kOk),
-        subcode_(kNone),
-        sev_(kNoError),
-        retryable_(false),
-        data_loss_(false),
-        scope_(0),
-        state_(nullptr) {}
-  ~Status() {
+  constexpr Status() noexcept
+    : code_{kOk}
+    , subcode_{kNone}
+    , sev_{kNoError}
+    , retryable_{false}
+    , data_loss_{false}
+    , scope_{0}
+    , state_{nullptr} { }
+
 #ifdef ROCKSDB_ASSERT_STATUS_CHECKED
+  ~Status() {
     if (!checked_) {
       fprintf(stderr, "Failed to check Status %p\n", this);
       port::PrintStack();
       std::abort();
     }
-#endif  // ROCKSDB_ASSERT_STATUS_CHECKED
   }
+#else
+  ~Status() = default;
+#endif
 
   // Copy the specified status.
   Status(const Status& s);
   Status& operator=(const Status& s);
+
   Status(Status&& s) noexcept;
   Status& operator=(Status&& s) noexcept;
-  bool operator==(const Status& rhs) const;
-  bool operator!=(const Status& rhs) const;
+
+  constexpr bool operator==(const Status& rhs) const noexcept {
+    return code() == rhs.code();
+  }
+
+  constexpr bool operator!=(const Status& rhs) const noexcept {
+    return !(*this == rhs);
+  }
 
   // In case of intentionally swallowing an error, user must explicitly call
   // this function. That way we are easily able to search the code to find where
   // error swallowing occurs.
-  inline void PermitUncheckedError() const { MarkChecked(); }
+  constexpr void PermitUncheckedError() const noexcept {
+    MarkChecked();
+  }
 
-  inline void MustCheck() const {
+  constexpr void MustCheck() const noexcept {
 #ifdef ROCKSDB_ASSERT_STATUS_CHECKED
     checked_ = false;
 #endif  // ROCKSDB_ASSERT_STATUS_CHECKED
   }
 
+private:
+  constexpr void MarkChecked() const noexcept {
+#ifdef ROCKSDB_ASSERT_STATUS_CHECKED
+    checked_ = true;
+#endif  // ROCKSDB_ASSERT_STATUS_CHECKED
+  }
+
+public:
   enum Code : unsigned char {
     kOk = 0,
     kNotFound = 1,
@@ -92,7 +112,8 @@ class Status {
     kMaxCode
   };
 
-  Code code() const {
+  [[nodiscard]]
+  constexpr Code code() const noexcept {
     MarkChecked();
     return code_;
   }
@@ -118,7 +139,8 @@ class Status {
     kMaxSubCode
   };
 
-  SubCode subcode() const {
+  [[nodiscard]]
+  constexpr SubCode subcode() const noexcept {
     MarkChecked();
     return subcode_;
   }
@@ -132,6 +154,12 @@ class Status {
     kMaxSeverity
   };
 
+  [[nodiscard]]
+  constexpr Severity severity() const noexcept {
+    MarkChecked();
+    return sev_;
+  }
+
   Status(const Status& s, Severity sev);
 
   Status(Code _code, SubCode _subcode, Severity _sev, const Slice& msg)
@@ -140,13 +168,9 @@ class Status {
   static Status CopyAppendMessage(const Status& s, const Slice& delim,
                                   const Slice& msg);
 
-  Severity severity() const {
-    MarkChecked();
-    return sev_;
-  }
-
   // Returns a C style string indicating the message of the Status
-  const char* getState() const {
+  [[nodiscard]]
+  const char* getState() const noexcept {
     MarkChecked();
     return state_.get();
   }
@@ -171,7 +195,7 @@ class Status {
   }
 
   // Return a success status.
-  static Status OK() { return Status(); }
+  static Status OK() noexcept { return {}; }
 
   // Successful, though an existing something was overwritten
   // Note: using variants of OK status for program logic is discouraged,
@@ -317,8 +341,8 @@ class Status {
   }
 
   // Returns true iff the status indicates success.
-  bool ok() const {
-    MarkChecked();
+  [[nodiscard]]
+  constexpr bool ok() const noexcept {
     return code() == kOk;
   }
 
@@ -503,21 +527,23 @@ class Status {
 #endif  // ROCKSDB_ASSERT_STATUS_CHECKED
 
   explicit Status(Code _code, SubCode _subcode = kNone)
-      : code_(_code),
-        subcode_(_subcode),
-        sev_(kNoError),
-        retryable_(false),
-        data_loss_(false),
-        scope_(0) {}
+    : code_(_code)
+    , subcode_(_subcode)
+    , sev_(kNoError)
+    , retryable_(false)
+    , data_loss_(false)
+    , scope_(0)
+    , state_(nullptr) { }
 
-  explicit Status(Code _code, SubCode _subcode, bool retryable, bool data_loss,
-                  unsigned char scope)
-      : code_(_code),
-        subcode_(_subcode),
-        sev_(kNoError),
-        retryable_(retryable),
-        data_loss_(data_loss),
-        scope_(scope) {}
+  explicit Status(Code _code, SubCode _subcode,
+                  bool retryable, bool data_loss, unsigned char scope)
+    : code_(_code)
+    , subcode_(_subcode)
+    , sev_(kNoError)
+    , retryable_(retryable)
+    , data_loss_(data_loss)
+    , scope_(scope)
+    , state_(nullptr) { }
 
   Status(Code _code, SubCode _subcode, const Slice& msg, const Slice& msg2,
          Severity sev = kNoError);
@@ -525,85 +551,77 @@ class Status {
       : Status(_code, kNone, msg, msg2) {}
 
   static std::unique_ptr<const char[]> CopyState(const char* s);
-
-  inline void MarkChecked() const {
-#ifdef ROCKSDB_ASSERT_STATUS_CHECKED
-    checked_ = true;
-#endif  // ROCKSDB_ASSERT_STATUS_CHECKED
-  }
 };
 
 inline Status::Status(const Status& s)
-    : code_(s.code_),
-      subcode_(s.subcode_),
-      sev_(s.sev_),
-      retryable_(s.retryable_),
-      data_loss_(s.data_loss_),
-      scope_(s.scope_) {
-  s.MarkChecked();
-  state_ = (s.state_ == nullptr) ? nullptr : CopyState(s.state_.get());
+  : code_(s.code_)
+  , subcode_(s.subcode_)
+  , sev_(s.sev_)
+  , retryable_(s.retryable_)
+  , data_loss_(s.data_loss_)
+  , scope_(s.scope_)
+  , state_(s.state_ ? CopyState(s.state_.get()) : nullptr) {
+#ifdef ROCKSDB_ASSERT_STATUS_CHECKED
+  checked_ = false; s.checked_ = true;
+#endif
 }
+
 inline Status::Status(const Status& s, Severity sev)
-    : code_(s.code_),
-      subcode_(s.subcode_),
-      sev_(sev),
-      retryable_(s.retryable_),
-      data_loss_(s.data_loss_),
-      scope_(s.scope_) {
-  s.MarkChecked();
-  state_ = (s.state_ == nullptr) ? nullptr : CopyState(s.state_.get());
+  : code_(s.code_)
+  , subcode_(s.subcode_)
+  , sev_(sev)
+  , retryable_(s.retryable_)
+  , data_loss_(s.data_loss_)
+  , scope_(s.scope_)
+  , state_(s.state_ ? CopyState(s.state_.get()) : nullptr) {
+#ifdef ROCKSDB_ASSERT_STATUS_CHECKED
+  checked_ = false; s.checked_ = true;
+#endif
 }
+
 inline Status& Status::operator=(const Status& s) {
-  if (this != &s) {
-    s.MarkChecked();
-    MustCheck();
+  if ( this != &s ) {
     code_ = s.code_;
     subcode_ = s.subcode_;
     sev_ = s.sev_;
     retryable_ = s.retryable_;
     data_loss_ = s.data_loss_;
     scope_ = s.scope_;
-    state_ = (s.state_ == nullptr) ? nullptr : CopyState(s.state_.get());
+    state_ = s.state_ ? CopyState(s.state_.get()) : nullptr;
+#ifdef ROCKSDB_ASSERT_STATUS_CHECKED
+    checked_ = false; s.checked_ = true;
+#endif
   }
   return *this;
 }
 
-inline Status::Status(Status&& s) noexcept : Status() {
-  s.MarkChecked();
-  *this = std::move(s);
+inline Status::Status(Status&& s) noexcept
+  : code_{ std::exchange(s.code_, kOk) }
+  , subcode_{ std::exchange(s.subcode_, kNone) }
+  , sev_{ std::exchange(s.sev_, kNoError) }
+  , retryable_{ std::exchange(s.retryable_, false) }
+  , data_loss_{ std::exchange(s.data_loss_, false) }
+  , scope_{ std::exchange(s.scope_, 0) }
+  , state_{ std::exchange(s.state_, nullptr) } {
+#ifdef ROCKSDB_ASSERT_STATUS_CHECKED
+  checked_ = false; s.checked_ = true;
+#endif
 }
 
 inline Status& Status::operator=(Status&& s) noexcept {
-  if (this != &s) {
-    s.MarkChecked();
-    MustCheck();
-    code_ = std::move(s.code_);
-    s.code_ = kOk;
-    subcode_ = std::move(s.subcode_);
-    s.subcode_ = kNone;
-    sev_ = std::move(s.sev_);
-    s.sev_ = kNoError;
-    retryable_ = std::move(s.retryable_);
-    s.retryable_ = false;
-    data_loss_ = std::move(s.data_loss_);
-    s.data_loss_ = false;
-    scope_ = std::move(s.scope_);
-    s.scope_ = 0;
-    state_ = std::move(s.state_);
+  if ( this != &s ) {
+    code_ = std::exchange( s.code_, kOk );
+    subcode_ = std::exchange(s.subcode_, kNone);
+    sev_ = std::exchange(s.sev_, kNoError);
+    retryable_= std::exchange(s.retryable_, false);
+    data_loss_= std::exchange(s.data_loss_, false);
+    scope_ = std::exchange(s.scope_, 0);
+    state_= std::exchange(s.state_, nullptr);
+#ifdef ROCKSDB_ASSERT_STATUS_CHECKED
+    checked_ = false; s.checked_ = true;
+#endif
   }
   return *this;
-}
-
-inline bool Status::operator==(const Status& rhs) const {
-  MarkChecked();
-  rhs.MarkChecked();
-  return (code_ == rhs.code_);
-}
-
-inline bool Status::operator!=(const Status& rhs) const {
-  MarkChecked();
-  rhs.MarkChecked();
-  return !(*this == rhs);
 }
 
 }  // namespace ROCKSDB_NAMESPACE

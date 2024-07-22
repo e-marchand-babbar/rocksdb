@@ -11,9 +11,11 @@ if(${CMAKE_VERSION} VERSION_LESS "3.11.4")
     message("Please consider switching to CMake 3.11.4 or newer")
 endif()
 
-set(CMAKE_JAVA_COMPILE_FLAGS -source 8)
+set(CMAKE_JAVA_COMPILE_FLAGS -source 11)
 
 set(JNI_NATIVE_SOURCES
+        rocksjni/abstract_associative_merge_operator.cc
+        rocksjni/abstract_compaction_filter.cc
         rocksjni/backup_engine_options.cc
         rocksjni/backupenginejni.cc
         rocksjni/cache.cc
@@ -23,7 +25,6 @@ set(JNI_NATIVE_SOURCES
         rocksjni/clock_cache.cc
         rocksjni/columnfamilyhandle.cc
         rocksjni/compact_range_options.cc
-        rocksjni/compaction_filter.cc
         rocksjni/compaction_filter_factory.cc
         rocksjni/compaction_filter_factory_jnicallback.cc
         rocksjni/compaction_job_info.cc
@@ -60,6 +61,7 @@ set(JNI_NATIVE_SOURCES
         rocksjni/options.cc
         rocksjni/options_util.cc
         rocksjni/persistent_cache.cc
+        rocksjni/portal.cc
         rocksjni/ratelimiterjni.cc
         rocksjni/remove_emptyvalue_compactionfilterjni.cc
         rocksjni/restorejni.cc
@@ -138,6 +140,7 @@ set(JAVA_MAIN_CLASSES
   src/main/java/org/rocksdb/ColumnFamilyMetaData.java
   src/main/java/org/rocksdb/ColumnFamilyOptions.java
   src/main/java/org/rocksdb/ColumnFamilyOptionsInterface.java
+  src/main/java/org/rocksdb/CompactionFilter.java
   src/main/java/org/rocksdb/CompactRangeOptions.java
   src/main/java/org/rocksdb/CompactionJobInfo.java
   src/main/java/org/rocksdb/CompactionJobStats.java

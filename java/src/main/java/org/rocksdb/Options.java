@@ -244,22 +244,20 @@ public class Options extends RocksObject
   }
 
   @Override
-  public Options setCompactionFilter(
-          final AbstractCompactionFilter<? extends AbstractSlice<?>>
-                  compactionFilter) {
+  public Options setCompactionFilter( final CompactionFilter compactionFilter) {
     setCompactionFilterHandle(nativeHandle_, compactionFilter.nativeHandle_);
     compactionFilter_ = compactionFilter;
     return this;
   }
 
   @Override
-  public AbstractCompactionFilter<? extends AbstractSlice<?>> compactionFilter() {
+  public CompactionFilter compactionFilter() {
     assert (isOwningHandle());
     return compactionFilter_;
   }
 
   @Override
-  public Options setCompactionFilterFactory(final AbstractCompactionFilterFactory<? extends AbstractCompactionFilter<?>> compactionFilterFactory) {
+  public Options setCompactionFilterFactory(final AbstractCompactionFilterFactory<?> compactionFilterFactory) {
     assert (isOwningHandle());
     setCompactionFilterFactoryHandle(nativeHandle_, compactionFilterFactory.nativeHandle_);
     compactionFilterFactory_ = compactionFilterFactory;
@@ -267,7 +265,7 @@ public class Options extends RocksObject
   }
 
   @Override
-  public AbstractCompactionFilterFactory<? extends AbstractCompactionFilter<?>> compactionFilterFactory() {
+  public AbstractCompactionFilterFactory<?> compactionFilterFactory() {
     assert (isOwningHandle());
     return compactionFilterFactory_;
   }
@@ -2531,9 +2529,8 @@ public class Options extends RocksObject
   private TableFormatConfig tableFormatConfig_;
   private RateLimiter rateLimiter_;
   private AbstractComparator comparator_;
-  private AbstractCompactionFilter<? extends AbstractSlice<?>> compactionFilter_;
-  private AbstractCompactionFilterFactory<? extends AbstractCompactionFilter<?>>
-          compactionFilterFactory_;
+  private CompactionFilter compactionFilter_;
+  private AbstractCompactionFilterFactory<?> compactionFilterFactory_;
   private CompactionOptionsUniversal compactionOptionsUniversal_;
   private CompactionOptionsFIFO compactionOptionsFIFO_;
   private CompressionOptions bottommostCompressionOptions_;

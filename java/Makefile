@@ -1,4 +1,5 @@
 NATIVE_JAVA_CLASSES = \
+	org.rocksdb.AbstractAssociativeMergeOperator \
 	org.rocksdb.AbstractCompactionFilter\
 	org.rocksdb.AbstractCompactionFilterFactory\
 	org.rocksdb.AbstractComparator\
@@ -19,6 +20,7 @@ NATIVE_JAVA_CLASSES = \
 	org.rocksdb.CassandraValueMergeOperator\
 	org.rocksdb.ColumnFamilyHandle\
 	org.rocksdb.ColumnFamilyOptions\
+	org.rocksdb.CompactionFilter\
 	org.rocksdb.CompactionJobInfo\
 	org.rocksdb.CompactionJobStats\
 	org.rocksdb.CompactionOptions\
@@ -107,7 +109,12 @@ NATIVE_INCLUDE = ./include
 ARCH := $(shell getconf LONG_BIT)
 SHA256_CMD ?= sha256sum
 
+JAVA_MERGE_TESTS = org.rocksdb.AbstractMergeOperatorTest
+JAVA_FILTER_TESTS = org.rocksdb.AbstractCompactionFilterTest
+
 JAVA_TESTS = \
+	org.rocksdb.AbstractMergeOperatorTest\
+	org.rocksdb.AbstractCompactionFilterTest\
 	org.rocksdb.BackupEngineOptionsTest\
 	org.rocksdb.BackupEngineTest\
 	org.rocksdb.BlobOptionsTest\
@@ -459,6 +466,12 @@ test: java java_test
 run_test:
 	$(JAVA_CMD) $(JAVA_ARGS) -Djava.library.path=target -cp "$(MAIN_CLASSES):$(TEST_CLASSES):$(JAVA_TESTCLASSPATH):target/*" org.rocksdb.test.RocksJunitRunner $(ALL_JAVA_TESTS)
 	$(JAVA_CMD) $(JAVA_ARGS) -Djava.library.path=target -cp "$(MAIN_CLASSES):$(TEST_CLASSES):$(JAVA_TESTCLASSPATH):target/*" org.rocksdb.test.RocksJunitRunner org.rocksdb.StatisticsTest
+
+run_merge_test:
+	$(JAVA_CMD) $(JAVA_ARGS) -Djava.library.path=target -cp "$(MAIN_CLASSES):$(TEST_CLASSES):$(JAVA_TESTCLASSPATH):target/*" org.rocksdb.test.RocksJunitRunner $(JAVA_MERGE_TESTS)
+
+run_filter_test:
+	$(JAVA_CMD) $(JAVA_ARGS) -Djava.library.path=target -cp "$(MAIN_CLASSES):$(TEST_CLASSES):$(JAVA_TESTCLASSPATH):target/*" org.rocksdb.test.RocksJunitRunner $(JAVA_FILTER_TESTS)
 
 run_plugin_test:
 	$(JAVA_CMD) $(JAVA_ARGS) -Djava.library.path=target -cp "$(MAIN_CLASSES):$(TEST_CLASSES):$(JAVA_TESTCLASSPATH):target/*" org.rocksdb.test.RocksJunitRunner $(ROCKSDB_PLUGIN_JAVA_TESTS)

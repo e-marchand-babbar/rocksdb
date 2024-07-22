@@ -6,14 +6,14 @@
 package org.rocksdb;
 
 
-public abstract class AbstractCompactionFilter extends CompactionFilter
+public abstract class AbstractAssociativeMergeOperator extends MergeOperator
 {
-  protected AbstractCompactionFilter() {
+  public AbstractAssociativeMergeOperator()  {
     super( newOperator() );
     initOperator( nativeHandle_ ) ;
   }
 
-  public abstract boolean filter( byte[] key, byte[] value ) throws RocksDBException;
+  abstract public byte[] merge( byte[] key, byte[] oldvalue, byte[] newvalue ) throws RocksDBException;
 
   @Override
   protected final native void disposeInternal( final long handle );

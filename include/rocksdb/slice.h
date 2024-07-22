@@ -32,18 +32,18 @@ namespace ROCKSDB_NAMESPACE {
 class Slice {
  public:
   // Create an empty slice.
-  Slice() : data_(""), size_(0) {}
+  constexpr Slice() noexcept : data_(""), size_(0) { }
 
   // Create a slice that refers to d[0,n-1].
-  Slice(const char* d, size_t n) : data_(d), size_(n) {}
+  constexpr Slice(const char* d, size_t n) noexcept : data_(d), size_(n) {}
 
   // Create a slice that refers to the contents of "s"
   /* implicit */
-  Slice(const std::string& s) : data_(s.data()), size_(s.size()) {}
+  Slice(const std::string& s) noexcept : data_(s.data()), size_(s.size()) {}
 
   // Create a slice that refers to the same contents as "sv"
   /* implicit */
-  Slice(const std::string_view& sv) : data_(sv.data()), size_(sv.size()) {}
+  Slice(const std::string_view& sv) noexcept : data_(sv.data()), size_(sv.size()) {}
 
   // Create a slice that refers to s[0,strlen(s)-1]
   /* implicit */
@@ -54,13 +54,16 @@ class Slice {
   Slice(const struct SliceParts& parts, std::string* buf);
 
   // Return a pointer to the beginning of the referenced data
-  const char* data() const { return data_; }
+  [[nodiscard]]
+  constexpr const char* data() const noexcept { return data_; }
 
   // Return the length (in bytes) of the referenced data
-  size_t size() const { return size_; }
+  [[nodiscard]]
+  constexpr size_t size() const noexcept { return size_; }
 
   // Return true iff the length of the referenced data is zero
-  bool empty() const { return size_ == 0; }
+  [[nodiscard]]
+  constexpr bool empty() const noexcept { return size_ == 0; }
 
   // Return the ith byte in the referenced data.
   // REQUIRES: n < size()

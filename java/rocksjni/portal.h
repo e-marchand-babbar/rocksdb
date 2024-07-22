@@ -19,6 +19,7 @@
 #include <iterator>
 #include <limits>
 #include <memory>
+#include <optional>
 #include <set>
 #include <string>
 #include <type_traits>
@@ -1675,7 +1676,7 @@ class JniUtil {
    * @return A pointer to the JNIEnv or nullptr if a fatal error
    *     occurs and the JNIEnv cannot be retrieved
    */
-  static JNIEnv* getJniEnv(JavaVM* jvm, jboolean* attached) {
+  static JNIEnv* getJniEnv(JavaVM* jvm, jboolean* attached, bool const as_daemon = false) {
     assert(jvm != nullptr);
 
     JNIEnv* env;
@@ -1688,8 +1689,9 @@ class JniUtil {
       return env;
     } else if (env_rs == JNI_EDETACHED) {
       // current thread is not attached, attempt to attach
-      const jint rs_attach =
-          jvm->AttachCurrentThread(reinterpret_cast<void**>(&env), nullptr);
+      const jint rs_attach = as_daemon
+        ? jvm->AttachCurrentThreadAsDaemon(reinterpret_cast<void**>(&env), nullptr)
+        : jvm->AttachCurrentThread(reinterpret_cast<void**>(&env), nullptr);
       if (rs_attach == JNI_OK) {
         *attached = JNI_TRUE;
         return env;
@@ -2194,42 +2196,30 @@ class JniUtil {
    *
    * TODO(AR) could be used for RocksDB->Put etc.
    */
-  static std::unique_ptr<ROCKSDB_NAMESPACE::Status> kv_op(
-      std::function<ROCKSDB_NAMESPACE::Status(ROCKSDB_NAMESPACE::Slice,
-                                              ROCKSDB_NAMESPACE::Slice)>
-          op,
-      JNIEnv* env, jbyteArray jkey, jint jkey_len, jbyteArray jvalue,
-      jint jvalue_len) {
-    jbyte* key = env->GetByteArrayElements(jkey, nullptr);
-    if (env->ExceptionCheck()) {
-      // exception thrown: OutOfMemoryError
-      return nullptr;
+  static std::optional<ROCKSDB_NAMESPACE::Status> kv_op(
+      const std::function<ROCKSDB_NAMESPACE::Status(ROCKSDB_NAMESPACE::Slice, ROCKSDB_NAMESPACE::Slice)>& op,
+      JNIEnv* env,
+      jbyteArray jkey, jint jkey_len,
+      jbyteArray jvalue, jint jvalue_len ) {
+    auto* const ckey = env->GetPrimitiveArrayCritical( jkey, nullptr );
+    if ( ckey == nullptr )
+      return std::nullopt; // error
+
+    auto* const cvalue = env->GetPrimitiveArrayCritical( jvalue, nullptr );
+    if ( cvalue == nullptr ) {
+      env->ReleasePrimitiveArrayCritical( jkey, ckey, JNI_ABORT );
+      return std::nullopt; // error
     }
 
-    jbyte* value = env->GetByteArrayElements(jvalue, nullptr);
-    if (env->ExceptionCheck()) {
-      // exception thrown: OutOfMemoryError
-      if (key != nullptr) {
-        env->ReleaseByteArrayElements(jkey, key, JNI_ABORT);
-      }
-      return nullptr;
-    }
+    auto status = op(
+      ROCKSDB_NAMESPACE::Slice{ static_cast<const char*>(ckey), static_cast<size_t>(jkey_len) },
+      ROCKSDB_NAMESPACE::Slice{ static_cast<const char*>(cvalue), static_cast<size_t>(jvalue_len) }
+    );
 
-    ROCKSDB_NAMESPACE::Slice key_slice(reinterpret_cast<char*>(key), jkey_len);
-    ROCKSDB_NAMESPACE::Slice value_slice(reinterpret_cast<char*>(value),
-                                         jvalue_len);
+    env->ReleasePrimitiveArrayCritical( jvalue, cvalue, JNI_ABORT );
+    env->ReleasePrimitiveArrayCritical( jkey, ckey, JNI_ABORT );
 
-    auto status = op(key_slice, value_slice);
-
-    if (value != nullptr) {
-      env->ReleaseByteArrayElements(jvalue, value, JNI_ABORT);
-    }
-    if (key != nullptr) {
-      env->ReleaseByteArrayElements(jkey, key, JNI_ABORT);
-    }
-
-    return std::unique_ptr<ROCKSDB_NAMESPACE::Status>(
-        new ROCKSDB_NAMESPACE::Status(status));
+    return status;
   }
 
   /*
@@ -2238,25 +2228,21 @@ class JniUtil {
    *
    * TODO(AR) could be used for RocksDB->Delete etc.
    */
-  static std::unique_ptr<ROCKSDB_NAMESPACE::Status> k_op(
-      std::function<ROCKSDB_NAMESPACE::Status(ROCKSDB_NAMESPACE::Slice)> op,
-      JNIEnv* env, jbyteArray jkey, jint jkey_len) {
-    jbyte* key = env->GetByteArrayElements(jkey, nullptr);
-    if (env->ExceptionCheck()) {
-      // exception thrown: OutOfMemoryError
-      return nullptr;
-    }
+  static std::optional<ROCKSDB_NAMESPACE::Status> k_op(
+      const std::function<ROCKSDB_NAMESPACE::Status(ROCKSDB_NAMESPACE::Slice)>& op,
+      JNIEnv* env,
+      jbyteArray jkey, jint jkey_len ) {
+    auto* const ckey = env->GetPrimitiveArrayCritical( jkey, nullptr );
+    if ( ckey == nullptr )
+      return std::nullopt; // error
 
-    ROCKSDB_NAMESPACE::Slice key_slice(reinterpret_cast<char*>(key), jkey_len);
+    auto status = op(
+      ROCKSDB_NAMESPACE::Slice{ static_cast<const char*>(ckey), static_cast<size_t>(jkey_len) }
+    );
 
-    auto status = op(key_slice);
+    env->ReleasePrimitiveArrayCritical( jkey, ckey, JNI_ABORT );
 
-    if (key != nullptr) {
-      env->ReleaseByteArrayElements(jkey, key, JNI_ABORT);
-    }
-
-    return std::unique_ptr<ROCKSDB_NAMESPACE::Status>(
-        new ROCKSDB_NAMESPACE::Status(status));
+    return status;
   }
 
   /*
@@ -2498,6 +2484,82 @@ class JniUtil {
 
     return cvalue_len;
   }
+};
+
+class JniEnv final {
+
+ public:
+  [[nodiscard]]
+  static JniEnv safe( JavaVM* const jvm  ) {
+    return JniEnv::from( jvm, false );
+  }
+
+  static const JniEnv& fast( JavaVM* const jvm ) {
+    static thread_local std::unique_ptr<JniEnv> cache =
+      std::make_unique<JniEnv>(
+        JniEnv::from( jvm, true )
+    );
+    return *cache;
+  }
+
+  static void shutdown() {
+    // this is to signal that the JVM is shutting down
+    // hence prevent destructor to call JniUtil::releaseJniEnv()
+    // this method should be called if using JniEnv::fast()
+    JniEnv::shutdown_ = true;
+  }
+
+ public:
+  JniEnv( JniEnv&& other ) noexcept
+    : jvm_(std::exchange(other.jvm_,nullptr))
+    , env_(std::exchange(other.env_,nullptr))
+    , attached_(std::exchange(other.attached_,false)) { }
+
+  ~JniEnv() {
+    if ( env_ != nullptr && !JniEnv::shutdown_ )
+      JniUtil::releaseJniEnv( jvm_, attached_ );
+  }
+
+  JniEnv( const JniEnv& ) = delete;
+
+ public:
+  [[nodiscard]]
+  inline JNIEnv* operator->() const noexcept {
+    return env_;
+  }
+
+  [[nodiscard]]
+  inline JNIEnv* get() const noexcept {
+    return env_;
+  }
+
+  [[nodiscard]]
+  explicit inline operator bool() const noexcept {
+    return env_ != nullptr;
+  }
+
+  JniEnv& operator=( JniEnv&& ) = delete;
+  JniEnv& operator=( const JniEnv& ) = delete;
+
+ private:
+  [[nodiscard]]
+  static JniEnv from( JavaVM* const jvm, bool const as_daemon ) {
+    jboolean jattached = JNI_FALSE;
+    auto* const env = JniUtil::getJniEnv( jvm, &jattached, as_daemon );
+    return JniEnv{ jvm, env, jattached }; // should use RVO
+  }
+
+ private:
+  JniEnv( JavaVM* const jvm, JNIEnv* const env, jboolean const attached ) noexcept
+    : jvm_(jvm), env_(env), attached_(attached) { }
+
+ private:
+  JavaVM* jvm_;
+  JNIEnv* env_;
+  jboolean attached_;
+
+ private:
+  static volatile bool shutdown_;
 };
 
 class MapJni : public JavaClass {

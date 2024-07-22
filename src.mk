@@ -654,14 +654,17 @@ MICROBENCH_SOURCES =                                          \
   microbench/db_basic_bench.cc                                  \
 
 JNI_NATIVE_SOURCES =                                          \
+  java/rocksjni/abstract_associative_merge_operator.cc        \
+  java/rocksjni/abstract_compaction_filter.cc                 \
   java/rocksjni/backupenginejni.cc                            \
   java/rocksjni/backup_engine_options.cc                      \
+  java/rocksjni/cache.cc                                      \
+  java/rocksjni/cassandra_compactionfilterjni.cc              \
+  java/rocksjni/cassandra_value_operator.cc                   \
   java/rocksjni/checkpoint.cc                                 \
   java/rocksjni/clock_cache.cc                                \
-  java/rocksjni/cache.cc                                      \
   java/rocksjni/columnfamilyhandle.cc                         \
   java/rocksjni/compact_range_options.cc                      \
-  java/rocksjni/compaction_filter.cc                          \
   java/rocksjni/compaction_filter_factory.cc                  \
   java/rocksjni/compaction_filter_factory_jnicallback.cc      \
   java/rocksjni/compaction_job_info.cc                        \
@@ -680,9 +683,9 @@ JNI_NATIVE_SOURCES =                                          \
   java/rocksjni/event_listener.cc                             \
   java/rocksjni/event_listener_jnicallback.cc                 \
   java/rocksjni/import_column_family_options.cc               \
-  java/rocksjni/ingest_external_file_options.cc               \
   java/rocksjni/filter.cc                                     \
   java/rocksjni/hyper_clock_cache.cc                          \
+  java/rocksjni/ingest_external_file_options.cc               \
   java/rocksjni/iterator.cc                                   \
   java/rocksjni/jni_perf_context.cc                           \
   java/rocksjni/jni_multiget_helpers.cc                       \
@@ -698,10 +701,9 @@ JNI_NATIVE_SOURCES =                                          \
   java/rocksjni/options.cc                                    \
   java/rocksjni/options_util.cc                               \
   java/rocksjni/persistent_cache.cc                           \
+  java/rocksjni/portal.cc                                     \
   java/rocksjni/ratelimiterjni.cc                             \
   java/rocksjni/remove_emptyvalue_compactionfilterjni.cc      \
-  java/rocksjni/cassandra_compactionfilterjni.cc              \
-  java/rocksjni/cassandra_value_operator.cc                   \
   java/rocksjni/restorejni.cc                                 \
   java/rocksjni/rocks_callback_object.cc                      \
   java/rocksjni/rocksjni.cc                                   \
@@ -720,18 +722,18 @@ JNI_NATIVE_SOURCES =                                          \
   java/rocksjni/table_filter.cc                               \
   java/rocksjni/table_filter_jnicallback.cc                   \
   java/rocksjni/table_properties_collector_factory.cc         \
+  java/rocksjni/testable_event_listener.cc                    \
   java/rocksjni/thread_status.cc                              \
   java/rocksjni/trace_writer.cc                               \
   java/rocksjni/trace_writer_jnicallback.cc                   \
   java/rocksjni/transaction.cc                                \
   java/rocksjni/transaction_db.cc                             \
-  java/rocksjni/transaction_options.cc                        \
   java/rocksjni/transaction_db_options.cc                     \
   java/rocksjni/transaction_log.cc                            \
   java/rocksjni/transaction_notifier.cc                       \
   java/rocksjni/transaction_notifier_jnicallback.cc           \
+  java/rocksjni/transaction_options.cc                        \
   java/rocksjni/ttl.cc                                        \
-  java/rocksjni/testable_event_listener.cc                    \
   java/rocksjni/wal_filter.cc                                 \
   java/rocksjni/wal_filter_jnicallback.cc                     \
   java/rocksjni/write_batch.cc                                \

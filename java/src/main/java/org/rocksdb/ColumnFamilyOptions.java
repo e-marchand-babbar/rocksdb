@@ -227,21 +227,20 @@ public class ColumnFamilyOptions
 
   @Override
   public ColumnFamilyOptions setCompactionFilter(
-        final AbstractCompactionFilter<? extends AbstractSlice<?>>
-            compactionFilter) {
+        final CompactionFilter compactionFilter) {
     setCompactionFilterHandle(nativeHandle_, compactionFilter.nativeHandle_);
     compactionFilter_ = compactionFilter;
     return this;
   }
 
   @Override
-  public AbstractCompactionFilter<? extends AbstractSlice<?>> compactionFilter() {
+  public CompactionFilter compactionFilter() {
     assert (isOwningHandle());
     return compactionFilter_;
   }
 
   @Override
-  public ColumnFamilyOptions setCompactionFilterFactory(final AbstractCompactionFilterFactory<? extends AbstractCompactionFilter<?>> compactionFilterFactory) {
+  public ColumnFamilyOptions setCompactionFilterFactory(final AbstractCompactionFilterFactory<?> compactionFilterFactory) {
     assert (isOwningHandle());
     setCompactionFilterFactoryHandle(nativeHandle_, compactionFilterFactory.nativeHandle_);
     compactionFilterFactory_ = compactionFilterFactory;
@@ -249,7 +248,7 @@ public class ColumnFamilyOptions
   }
 
   @Override
-  public AbstractCompactionFilterFactory<? extends AbstractCompactionFilter<?>> compactionFilterFactory() {
+  public AbstractCompactionFilterFactory<?> compactionFilterFactory() {
     assert (isOwningHandle());
     return compactionFilterFactory_;
   }
@@ -1528,9 +1527,8 @@ public class ColumnFamilyOptions
   private MemTableConfig memTableConfig_;
   private TableFormatConfig tableFormatConfig_;
   private AbstractComparator comparator_;
-  private AbstractCompactionFilter<? extends AbstractSlice<?>> compactionFilter_;
-  private AbstractCompactionFilterFactory<? extends AbstractCompactionFilter<?>>
-      compactionFilterFactory_;
+  private CompactionFilter compactionFilter_;
+  private AbstractCompactionFilterFactory<?> compactionFilterFactory_;
   private CompactionOptionsUniversal compactionOptionsUniversal_;
   private CompactionOptionsFIFO compactionOptionsFIFO_;
   private CompressionOptions bottommostCompressionOptions_;

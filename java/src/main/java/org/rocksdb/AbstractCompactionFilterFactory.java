@@ -6,41 +6,37 @@
 package org.rocksdb;
 
 /**
- * Each compaction will create a new {@link AbstractCompactionFilter}
+ * Each compaction will create a new {@link CompactionFilter}
  * allowing the application to know about different compactions
  *
  * @param <T> The concrete type of the compaction filter
  */
-public abstract class AbstractCompactionFilterFactory<T extends AbstractCompactionFilter<?>>
-    extends RocksCallbackObject {
-
+public abstract class AbstractCompactionFilterFactory<T extends CompactionFilter> extends RocksCallbackObject
+{
   public AbstractCompactionFilterFactory() {
     super(0L);
   }
 
   @Override
-  protected long initializeNative(final long... nativeParameterHandles) {
+  protected long initializeNative( final long... nativeParameterHandles ) {
     return createNewCompactionFilterFactory0();
   }
 
   /**
    * Called from JNI, see compaction_filter_factory_jnicallback.cc
    *
-   * @param fullCompaction {@link AbstractCompactionFilter.Context#fullCompaction}
-   * @param manualCompaction {@link AbstractCompactionFilter.Context#manualCompaction}
+   * @param fullCompaction {@link CompactionFilter.Context#fullCompaction}
+   * @param manualCompaction {@link CompactionFilter.Context#manualCompaction}
    *
    * @return native handle of the CompactionFilter
    */
   @SuppressWarnings({"PMD.UnusedPrivateMethod", "PMD.CloseResource"})
-  private long createCompactionFilter(
-      final boolean fullCompaction, final boolean manualCompaction) {
-    final T filter = createCompactionFilter(
-        new AbstractCompactionFilter.Context(fullCompaction, manualCompaction));
+  private long createCompactionFilter( final boolean fullCompaction, final boolean manualCompaction ) {
+    final var filter = createCompactionFilter( new CompactionFilter.Context(fullCompaction,manualCompaction) );
 
     // CompactionFilterFactory::CreateCompactionFilter returns a std::unique_ptr
     // which therefore has ownership of the underlying native object
     filter.disOwnNativeHandle();
-
     return filter.nativeHandle_;
   }
 
@@ -49,10 +45,9 @@ public abstract class AbstractCompactionFilterFactory<T extends AbstractCompacti
    *
    * @param context The context describing the need for a new compaction filter
    *
-   * @return A new instance of {@link AbstractCompactionFilter}
+   * @return A new instance of {@link CompactionFilter}
    */
-  public abstract T createCompactionFilter(
-      final AbstractCompactionFilter.Context context);
+  public abstract T createCompactionFilter( final CompactionFilter.Context context );
 
   /**
    * A name which identifies this compaction filter
@@ -70,9 +65,9 @@ public abstract class AbstractCompactionFilterFactory<T extends AbstractCompacti
    */
   @Override
   protected void disposeInternal() {
-    disposeInternal(nativeHandle_);
+    disposeInternal( nativeHandle_ );
   }
 
   private native long createNewCompactionFilterFactory0();
-  private static native void disposeInternal(final long handle);
+  private static native void disposeInternal( final long handle );
 }

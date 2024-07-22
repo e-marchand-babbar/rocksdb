@@ -301,6 +301,15 @@ void Java_org_rocksdb_RocksDB_disposeInternalJni(JNIEnv*, jclass,
 
 /*
  * Class:     org_rocksdb_RocksDB
+ * Method:    shutdownJniEnv
+ * Signature: ()V
+ */
+void Java_org_rocksdb_RocksDB_shutdownJniEnv(JNIEnv*, jclass) {
+  ROCKSDB_NAMESPACE::JniEnv::shutdown();
+}
+
+/*
+ * Class:     org_rocksdb_RocksDB
  * Method:    closeDatabase
  * Signature: (J)V
  */

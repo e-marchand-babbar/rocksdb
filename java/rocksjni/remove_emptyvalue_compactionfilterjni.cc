@@ -22,3 +22,15 @@ jlong Java_org_rocksdb_RemoveEmptyValueCompactionFilter_createNewRemoveEmptyValu
   // set the native handle to our native compaction filter
   return GET_CPLUSPLUS_POINTER(compaction_filter);
 }
+
+/*
+ * Class:     org_rocksdb_RemoveEmptyValueCompactionFilter
+ * Method:    disposeInternal
+ * Signature: (J)V
+ */
+void Java_org_rocksdb_RemoveEmptyValueCompactionFilter_disposeInternal(
+    JNIEnv* /*env*/, jobject /*jobj*/, jlong jhandle ) {
+  auto* cf = reinterpret_cast<ROCKSDB_NAMESPACE::CompactionFilter*>( jhandle );
+  assert(cf != nullptr);
+  delete cf;
+}
